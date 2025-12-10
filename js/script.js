@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // =======================
     // Animation d'erreur
     // =======================
-    function showErrorAnimation() {
+    function showErrorAnimation(customMessage) {
         const overlay = document.getElementById('successOverlay');
         const successContainer = overlay.querySelector('.success-container');
         const successContent = overlay.querySelector('.success-content');
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
         successTitle.style.color = '#ff0055';
         successTitle.style.textShadow = '0 0 10px #ff0055, 0 0 20px #ff0055';
         
-        successSubtitle.textContent = 'Les mots de passe ne correspondent pas';
+        successSubtitle.textContent = customMessage || 'Les mots de passe ne correspondent pas';
         successSubtitle.style.color = '#ff4488';
         
         // Configurer l'icône en rouge
@@ -248,30 +248,8 @@ document.addEventListener('DOMContentLoaded', () => {
         cheatPopup.classList.remove('show');
     }
     
-    function showLeavePopup() {
-        leavePopup.classList.add('show');
-        errorSound.play();
-    }
-    
-    function hideLeavePopup() {
-        leavePopup.classList.remove('show');
-    }
-    
     cheatButton.addEventListener('click', hideCheatPopup);
-    leaveButton.addEventListener('click', hideLeavePopup);
-    
-    // Empêcher de quitter la page
-    window.addEventListener('beforeunload', (e) => {
-        e.preventDefault();
-        e.returnValue = ''; // Nécessaire pour Chrome
-        showLeavePopup();
-        return '';
-    });
-    
-    // Empêcher aussi avec les événements de navigation
-    window.addEventListener('unload', (e) => {
-        e.preventDefault();
-    });
+    leaveButton.addEventListener('click', hideCheatPopup);
     
     // Désactiver le clic droit partout
     document.addEventListener('contextmenu', (e) => {
@@ -280,7 +258,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     });
     
-    // Détecter F12 (outils de développement)
     document.addEventListener('keydown', (e) => {
         // Détecter F12
         if (e.key === 'F12' || e.keyCode === 123) {
@@ -335,13 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if ((e.ctrlKey || e.metaKey) && (e.key === 'T' || e.key === 't')) {
             e.preventDefault();
             showCheatPopup('Pourquoi tu veux ouvrir une nouvelle page ?');
-            return false;
-        }
-        
-        // Détecter Ctrl+W ou Ctrl+F4 (fermer l'onglet)
-        if ((e.ctrlKey || e.metaKey) && (e.key === 'W' || e.key === 'w' || e.key === 'F4')) {
-            e.preventDefault();
-            showLeavePopup();
             return false;
         }
         
@@ -418,47 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Détecter aussi les événements copy, paste, cut
-    const passwordInputs = [passwordInput, confirmInput];
-    passwordInputs.forEach(input => {
-        ['copy', 'paste', 'cut'].forEach(evt => {
-            input.addEventListener(evt, (e) => {
-                e.preventDefault();
-                showCheatPopup();
-            });
-        });
-    });
     
-    // =======================
-    // Désactiver la sélection de texte
-    // =======================
-    document.addEventListener('selectstart', (e) => {
-        e.preventDefault();
-        return false;
-    });
-    
-    document.addEventListener('dragstart', (e) => {
-        e.preventDefault();
-        return false;
-    });
-    
-    // Désactiver la sélection via CSS aussi
-    document.body.style.userSelect = 'none';
-    document.body.style.webkitUserSelect = 'none';
-    document.body.style.mozUserSelect = 'none';
-    document.body.style.msUserSelect = 'none';
-    
-    // =======================
-    // Blocage de la navigation (flèches arrière/avant)
-    // =======================
-    window.addEventListener('popstate', (e) => {
-        e.preventDefault();
-        history.pushState(null, null, window.location.href);
-        showCheatPopup('Tu ne peux pas naviguer en arrière !');
-    });
-    
-    // Empêcher la navigation arrière/avant
-    history.pushState(null, null, window.location.href);
     
     // =======================
     // Détection de la console DevTools ouverte
@@ -514,41 +444,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Vérifier périodiquement (toutes les 2 secondes)
     setInterval(detectConsoleAdvanced, 2000);
     
-    // =======================
-    // Protection contre le changement d'URL
-    // =======================
-    let currentUrl = window.location.href;
-    setInterval(() => {
-        if (window.location.href !== currentUrl) {
-            window.location.href = currentUrl;
-            showCheatPopup('Tu ne peux pas modifier l\'URL !');
-        }
-    }, 100);
-    
-    // =======================
-    // Détection de modification du DOM
-    // =======================
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            // Vérifier si des éléments critiques ont été modifiés
-            if (mutation.type === 'attributes' && 
-                (mutation.target.id === 'password' || 
-                 mutation.target.id === 'confirmPassword' ||
-                 mutation.target.id === 'resetForm')) {
-                showCheatPopup('Tu ne peux pas modifier le formulaire !');
-                // Restaurer l'état original
-                location.reload();
-            }
-        });
-    });
-    
-    observer.observe(document.body, {
-        attributes: true,
-        childList: true,
-        subtree: true,
-        attributeOldValue: true
-    });
-
     // =======================
     // Règles de validation
     // =======================
@@ -693,13 +588,13 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.classList.add('loading');
             submitBtn.disabled = true;
             document.getElementById('btnText').style.display = 'none';
-            showErrorAnimation();
+            showErrorAnimation('Les mots de passe ne correspondent pas');
             return;
         }
-
+        
         const allRulesValid = Object.values(rules).every(rule => rule.test(pwd));
         if(!allRulesValid) {
-            showMessage("Le mot de passe ne respecte pas toutes les contraintes.", "error");
+            showErrorAnimation('Le mot de passe ne respecte pas toutes les contraintes.');
             errorSound.play();
             return;
         }
@@ -718,11 +613,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 successSound.play();
                 showSuccessAnimation(data.flag, data.message);
             } else {
-                showMessage(data.message, "error");
+                showErrorAnimation(data.message || 'Réinitialisation refusée.');
                 errorSound.play();
             }
         } catch (error) {
-            showMessage("Erreur de communication avec le serveur.", "error");
+            showErrorAnimation("Erreur de communication avec le serveur.");
             errorSound.play();
         }
         resetFormState();

@@ -1,6 +1,33 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // =======================
+    // Gestion du token CSRF
+    // =======================
+    let csrfToken = '';
+    
+    // Récupérer le token CSRF au chargement
+    async function getCSRFToken() {
+        try {
+            const response = await fetch('api/get-flag.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action: 'get_token' })
+            });
+            const data = await response.json();
+            if (data.csrf_token) {
+                csrfToken = data.csrf_token;
+            }
+        } catch (error) {
+            console.error('Erreur lors de la récupération du token CSRF:', error);
+        }
+    }
+    
+    // Initialiser le token CSRF
+    getCSRFToken();
+
+    // =======================
     // Génération de particules
     // =======================
     const particlesContainer = document.getElementById('particles');
@@ -599,24 +626,77 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Vérifier que le token CSRF est disponible
+        if (!csrfToken) {
+            // Essayer de récupérer le token une dernière fois
+            await getCSRFToken();
+            if (!csrfToken) {
+                showErrorAnimation('Erreur de sécurité. Veuillez recharger la page.');
+                errorSound.play();
+                resetFormState();
+                return;
+            }
+        }
+
         submitBtn.classList.add('loading');
         submitBtn.disabled = true;
         document.getElementById('btnText').style.display = 'none';
 
         try {
-            const encodedPassword = encodeURIComponent(pwd);
-            const response = await fetch(`api/get-flag.php?password=${encodedPassword}`);
-            const data = await response.json();
+            // Utiliser POST au lieu de GET pour sécuriser le mot de passe
+            const response = await fetch('api/get-flag.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': csrfToken
+                },
+                credentials: 'include', // Inclure les cookies pour la session
+                body: JSON.stringify({
+                    password: pwd,
+                    confirm_password: confirm,
+                    csrf_token: csrfToken
+                })
+            });
+
+            // Vérifier si la réponse est valide avant de parser le JSON
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                // Si le JSON ne peut pas être parsé, c'est probablement une erreur serveur
+                showErrorAnimation('Erreur serveur. Veuillez réessayer.');
+                errorSound.play();
+                resetFormState();
+                return;
+            }
+
+            // Mettre à jour le token CSRF si fourni
+            if (data.csrf_token) {
+                csrfToken = data.csrf_token;
+            }
 
             if(data.success) {
                 stopForm();
                 successSound.play();
                 showSuccessAnimation(data.flag, data.message);
             } else {
-                showErrorAnimation(data.message || 'Réinitialisation refusée.');
+                // Gérer les erreurs spécifiques
+                if (response.status === 429) {
+                    showErrorAnimation('Trop de tentatives. Veuillez patienter quelques minutes avant de réessayer.');
+                } else if (response.status === 403) {
+                    showErrorAnimation('Requête invalide. Veuillez recharger la page.');
+                    // Réinitialiser le token CSRF
+                    csrfToken = '';
+                    await getCSRFToken();
+                } else if (response.status === 405) {
+                    showErrorAnimation('Méthode non autorisée.');
+                } else {
+                    showErrorAnimation(data.message || 'Réinitialisation refusée.');
+                }
                 errorSound.play();
             }
         } catch (error) {
+            console.error('Erreur lors de la soumission:', error);
             showErrorAnimation("Erreur de communication avec le serveur.");
             errorSound.play();
         }

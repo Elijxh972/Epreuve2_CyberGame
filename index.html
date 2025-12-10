@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ÉPREUVE 2 - Reprise du Compte Compromis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Particules animées -->
+    <div class="particles" id="particles"></div>
+    
+    <!-- Grille cyberpunk -->
+    <div class="cyber-grid"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="glitch" data-text="ÉPREUVE 2">ÉPREUVE 2</h1>
+            <p class="subtitle">Reprise du Compte Compromis</p>
+        </div>
+
+        <!-- Alerte DSIN / Simulation officielle -->
+        <div class="official-alert">
+            <strong>ALERTE DSIN :</strong> Activité suspecte détectée sur le compte <em>admin@universite.fr</em>.<br>
+            Réinitialisez le mot de passe immédiatement. Tout manquement sera signalé.
+        </div>
+
+        <!-- Warning légal -->
+        <div class="legal-warning">
+            ⚠ Ce compte est sensible. Toute manipulation non autorisée est strictement interdite.
+        </div>
+
+        <!-- Formulaire de réinitialisation -->
+        <div class="form-card">
+            <form id="resetForm" action="#" method="post">
+                <!-- Champ email (verrouillé) -->
+                <div class="form-group">
+                    <label for="email">📧 Nom d'utilisateur (Email)</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email"
+                        class="form-control" 
+                        value="admin@universite.fr" 
+                        readonly
+                    >
+                </div>
+
+                <!-- Nouveau mot de passe -->
+                <div class="form-group">
+                    <label for="password">🔐 Nouveau mot de passe</label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            minlength="16"
+                            class="form-control" 
+                            placeholder="Créez un mot de passe ultra-sécurisé..."
+                            autocomplete="off"
+                            required
+                        >
+                    </div>
+                    
+                    <!-- Barre de progression -->
+                    <div class="password-strength">
+                        <div class="strength-label">
+                            <span class="strength-text" id="strengthText">Force : Non conforme</span>
+                            <span id="strengthPercent">0%</span>
+                        </div>
+                        <div class="strength-bar">
+                            <div class="strength-fill" id="strengthFill"></div>
+                        </div>
+                    </div>
+
+                    <!-- Checklist des règles -->
+                    <div class="rules-checklist">
+                        <div class="rule-item" id="rule-length">Minimum 16 caractères</div>
+                        <div class="rule-item" id="rule-uppercase">Au moins 1 majuscule</div>
+                        <div class="rule-item" id="rule-lowercase">Au moins 1 minuscule</div>
+                        <div class="rule-item" id="rule-digits">Au moins 2 chiffres</div>
+                        <div class="rule-item" id="rule-special">Au moins 2 caractères spéciaux parmi : ! @ # $ % ^ & * ( ) _ + - = [ ] { } : ; < > ?</div>
+                        <div class="rule-item" id="rule-unicode">Au moins 1 caractère Unicode étendu (é, à, ø, ß, Ω, ψ)</div>
+                        <div class="rule-item" id="rule-repeat">Aucun caractère répété plus de 2 fois d'affilée</div>
+                        <div class="rule-item" id="rule-sequence">Pas de suites évidentes (abcd, 123, azert, qwerty)</div>
+                    </div>
+                </div>
+
+                <!-- Confirmation du mot de passe -->
+                <div class="form-group">
+                    <label for="confirmPassword">🔒 Confirmation du mot de passe</label>
+                    <input 
+                        type="password" 
+                        id="confirmPassword" 
+                        class="form-control" 
+                        placeholder="Retapez le mot de passe identique..."
+                        autocomplete="off"
+                        required
+                    >
+                </div>
+
+                <!-- Bouton de validation -->
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span id="btnText">Réinitialiser le mot de passe</span>
+                    <div class="spinner"></div>
+                </button>
+
+                <!-- Messages -->
+                <div class="message" id="message"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Popup anti-triche -->
+    <div class="cheat-popup" id="cheatPopup">
+        <div class="cheat-popup-content">
+            <div class="cheat-icon">⚠️</div>
+            <h2 class="cheat-title">Détection de triche</h2>
+            <p class="cheat-message" id="cheatMessage"></p>
+            <button class="cheat-button" id="cheatButton">Je ne recommencerais pas</button>
+        </div>
+    </div>
+
+    <!-- Popup quitter la page -->
+    <div class="cheat-popup" id="leavePopup">
+        <div class="cheat-popup-content">
+            <div class="cheat-icon">🚫</div>
+            <h2 class="cheat-title">Oh oh reviens là</h2>
+            <p class="cheat-message">Tu ne peux pas quitter la page !</p>
+            <button class="cheat-button" id="leaveButton">D'accord, je reste</button>
+        </div>
+    </div>
+
+    <!-- Overlay d'animation de succès -->
+    <div class="success-overlay" id="successOverlay">
+        <div class="success-container">
+            <div class="scan-lines"></div>
+            <div class="success-content">
+                <div class="success-icon">✓</div>
+                <h2 class="success-title glitch-success" data-text="ACCÈS AUTORISÉ">ACCÈS AUTORISÉ</h2>
+                <div class="success-subtitle">Réinitialisation réussie</div>
+                <div class="flag-container">
+                    <div class="flag-label">FLAG DÉVOILÉ :</div>
+                    <div class="flag-value" id="flagValue"></div>
+                </div>
+            </div>
+            <div class="particles-success"></div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

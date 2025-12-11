@@ -1,6 +1,26 @@
 <?php
 session_start();
 
+// =======================
+// Mot de passe en dur (hardcodé)
+// =======================
+$HARDCODED_PASSWORD = 'Sécur1té@2024!Mdp#Très$Complexe&UnicodeΩ';
+
+// Forcer HTTPS pour sécuriser les données en transit
+if (!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS'] !== 'on') {
+    // En production, rediriger vers HTTPS
+    // En développement local, on peut être plus permissif
+    $isLocalhost = in_array($_SERVER['HTTP_HOST'] ?? '', ['localhost', '127.0.0.1', 'localhost:8080', '127.0.0.1:8080']);
+    if (!$isLocalhost) {
+        http_response_code(403);
+        echo json_encode([
+            'success' => false,
+            'message' => 'HTTPS requis pour la sécurité.'
+        ]);
+        exit;
+    }
+}
+
 header('Content-Type: application/json');
 
 // Configuration CORS sécurisée - autoriser uniquement les origines spécifiques
@@ -385,8 +405,21 @@ function validatePassword(string $pwd): array {
 
 $errors = validatePassword($password);
 
+// Vérifier que le mot de passe correspond au mot de passe en dur
 if (empty($errors)) {
-    logAttempt($clientIp, $password, true, 'Mot de passe valide');
+    // Comparaison stricte du mot de passe avec le mot de passe en dur
+    if (!hash_equals($HARDCODED_PASSWORD, $password)) {
+        logAttempt($clientIp, $password, false, 'Mot de passe incorrect');
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Le mot de passe ne respecte pas les critères de sécurité requis.'
+        ]);
+        exit;
+    }
+    
+    // Mot de passe correct
+    logAttempt($clientIp, $password, true, 'Mot de passe correct');
     
     // Générer un nouveau token CSRF après succès
     generateCSRFToken();

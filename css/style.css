@@ -2,6 +2,12 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -10,6 +16,11 @@ body {
     color: #ffffff;
     overflow-x: hidden;
     min-height: 100vh;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
 }
 
 /* Effet de particules animées en arrière-plan */
@@ -231,6 +242,10 @@ body {
     font-family: 'Inter', sans-serif;
     transition: all 0.3s ease;
     outline: none;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 
 .form-control:focus {

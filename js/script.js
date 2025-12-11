@@ -8,7 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Récupérer le token CSRF au chargement
     async function getCSRFToken() {
         try {
-            const response = await fetch('api/get-flag.php', {
+            // Utiliser HTTPS pour sécuriser les requêtes
+            const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+            const host = window.location.host;
+            const apiUrl = `${protocol}//${host}/api/get-flag.php`;
+            
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -278,6 +283,42 @@ document.addEventListener('DOMContentLoaded', () => {
     cheatButton.addEventListener('click', hideCheatPopup);
     leaveButton.addEventListener('click', hideCheatPopup);
     
+    // =======================
+    // Désactiver la sélection de texte
+    // =======================
+    document.addEventListener('selectstart', (e) => {
+        e.preventDefault();
+        return false;
+    });
+    
+    document.addEventListener('dragstart', (e) => {
+        e.preventDefault();
+        return false;
+    });
+    
+    // Empêcher le copier/coller partout (même dans les champs de mot de passe)
+    document.addEventListener('copy', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showCheatPopup('Copier est interdit !');
+        return false;
+    });
+    
+    document.addEventListener('cut', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showCheatPopup('Couper est interdit !');
+        return false;
+    });
+    
+    document.addEventListener('paste', (e) => {
+        // Bloquer le paste partout (même dans les champs de mot de passe)
+        e.preventDefault();
+        e.stopPropagation();
+        showCheatPopup('Coller est interdit !');
+        return false;
+    });
+    
     // Désactiver le clic droit partout
     document.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -285,25 +326,177 @@ document.addEventListener('DOMContentLoaded', () => {
         return false;
     });
     
+    // =======================
+    // Empêcher la souris de quitter la page
+    // =======================
+    let mouseLeaveTimeout;
+    
+    document.addEventListener('mouseleave', (e) => {
+        if (e.clientY <= 0) {
+            // La souris quitte par le haut (barre d'adresse)
+            showCheatPopup('Tu ne peux pas quitter la page !');
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    document.addEventListener('mouseout', (e) => {
+        if (!e.relatedTarget && !e.toElement) {
+            // La souris quitte la fenêtre
+            showCheatPopup('Tu ne peux pas quitter la page !');
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    // Empêcher la perte de focus (accès à l'URL)
+    window.addEventListener('blur', () => {
+        showCheatPopup('Tu ne peux pas quitter la page !');
+        window.focus();
+    });
+    
+    // Empêcher la fermeture de l'onglet/fenêtre
+    window.addEventListener('beforeunload', (e) => {
+        e.preventDefault();
+        e.returnValue = 'Tu ne peux pas quitter la page !';
+        showCheatPopup('Tu ne peux pas quitter la page !');
+        return 'Tu ne peux pas quitter la page !';
+    });
+    
+    // Empêcher l'accès à la barre d'adresse
     document.addEventListener('keydown', (e) => {
+        // Détecter F6 (focus sur la barre d'adresse)
+        if (e.key === 'F6' || e.keyCode === 117) {
+            e.preventDefault();
+            showCheatPopup('Tu ne peux pas accéder à la barre d\'adresse !');
+            return false;
+        }
+        
+        // Détecter Alt+D ou Ctrl+L (focus sur la barre d'adresse)
+        if ((e.altKey && (e.key === 'd' || e.key === 'D')) || 
+            ((e.ctrlKey || e.metaKey) && (e.key === 'l' || e.key === 'L'))) {
+            e.preventDefault();
+            showCheatPopup('Tu ne peux pas accéder à la barre d\'adresse !');
+            return false;
+        }
+    });
+    
+    // =======================
+    // Intercepter Alt, Tab et Ctrl même en keyup et keypress
+    // =======================
+    document.addEventListener('keyup', (e) => {
+        // Désactiver la touche Alt
+        if (e.key === 'Alt' || e.keyCode === 18 || e.altKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        
+        // Désactiver la touche Tab
+        if (e.key === 'Tab' || e.keyCode === 9) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        
+        // Désactiver la touche Ctrl complètement PARTOUT
+        if (e.key === 'Control' || e.key === 'Ctrl' || e.keyCode === 17 || e.ctrlKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        
+        // Désactiver la touche Meta
+        if (e.key === 'Meta' || e.keyCode === 91 || e.keyCode === 92 || e.keyCode === 93 || e.metaKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    });
+    
+    document.addEventListener('keypress', (e) => {
+        // Désactiver la touche Alt
+        if (e.key === 'Alt' || e.keyCode === 18 || e.altKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        
+        // Désactiver la touche Tab
+        if (e.key === 'Tab' || e.keyCode === 9) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        
+        // Désactiver la touche Ctrl complètement PARTOUT
+        if (e.key === 'Control' || e.key === 'Ctrl' || e.keyCode === 17 || e.ctrlKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        
+        // Désactiver la touche Meta
+        if (e.key === 'Meta' || e.keyCode === 91 || e.keyCode === 92 || e.keyCode === 93 || e.metaKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    });
+    
+    // Empêcher le drag and drop de fichiers
+    document.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        return false;
+    });
+    
+    document.addEventListener('drop', (e) => {
+        e.preventDefault();
+        showCheatPopup('Le drag and drop est interdit !');
+        return false;
+    });
+    
+    document.addEventListener('keydown', (e) => {
+        // =======================
+        // Désactiver complètement Alt, Tab et Ctrl
+        // =======================
+        
+        // Désactiver la touche Alt complètement
+        if (e.key === 'Alt' || e.keyCode === 18 || e.altKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            showCheatPopup('La touche Alt est désactivée !');
+            return false;
+        }
+        
+        // Désactiver la touche Tab complètement
+        if (e.key === 'Tab' || e.keyCode === 9) {
+            e.preventDefault();
+            e.stopPropagation();
+            showCheatPopup('La touche Tab est désactivée !');
+            return false;
+        }
+        
+        // Désactiver la touche Ctrl complètement PARTOUT (même dans les champs de mot de passe)
+        if (e.key === 'Control' || e.key === 'Ctrl' || e.keyCode === 17 || e.ctrlKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            showCheatPopup('La touche Ctrl est désactivée !');
+            return false;
+        }
+        
+        // Désactiver la touche Meta (Cmd sur Mac) complètement
+        if (e.key === 'Meta' || e.keyCode === 91 || e.keyCode === 92 || e.keyCode === 93 || e.metaKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            showCheatPopup('La touche Meta/Cmd est désactivée !');
+            return false;
+        }
+        
         // Détecter F12
         if (e.key === 'F12' || e.keyCode === 123) {
             e.preventDefault();
             showCheatPopup();
-            return false;
-        }
-        
-        // Détecter Alt+Tab (changement d'application)
-        if (e.altKey && (e.key === 'Tab' || e.keyCode === 9)) {
-            e.preventDefault();
-            showCheatPopup('Tu ne peux pas changer d\'application !');
-            return false;
-        }
-        
-        // Détecter Alt+Shift+Tab (changement d'application inverse)
-        if (e.altKey && e.shiftKey && (e.key === 'Tab' || e.keyCode === 9)) {
-            e.preventDefault();
-            showCheatPopup('Tu ne peux pas changer d\'application !');
             return false;
         }
         
@@ -342,13 +535,20 @@ document.addEventListener('DOMContentLoaded', () => {
             return false;
         }
         
-        // Vérifier si Ctrl ou Cmd est pressé avec C, V ou X (copier/coller)
+        // Désactiver Ctrl+A (sélectionner tout) PARTOUT
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'a' || e.key === 'A')) {
+            e.preventDefault();
+            e.stopPropagation();
+            showCheatPopup('Sélectionner tout est interdit !');
+            return false;
+        }
+        
+        // Désactiver Ctrl+C, Ctrl+V, Ctrl+X PARTOUT (même dans les champs de mot de passe)
         if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C' || e.key === 'v' || e.key === 'V' || e.key === 'x' || e.key === 'X')) {
-            // Vérifier si on est dans un champ de mot de passe
-            if (document.activeElement === passwordInput || document.activeElement === confirmInput) {
-                e.preventDefault();
-                showCheatPopup();
-            }
+            e.preventDefault();
+            e.stopPropagation();
+            showCheatPopup('Copier/Coller est interdit !');
+            return false;
         }
         
         // Détecter Ctrl+Shift+C (inspecteur Chrome)
@@ -413,6 +613,35 @@ document.addEventListener('DOMContentLoaded', () => {
             showCheatPopup();
             return false;
         }
+        
+        // Détecter Ctrl+W ou Ctrl+F4 (fermer l'onglet)
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'w' || e.key === 'W' || e.keyCode === 115)) {
+            e.preventDefault();
+            showCheatPopup('Tu ne peux pas fermer l\'onglet !');
+            return false;
+        }
+        
+        // Détecter Ctrl+Shift+W (fermer la fenêtre)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'w' || e.key === 'W')) {
+            e.preventDefault();
+            showCheatPopup('Tu ne peux pas fermer la fenêtre !');
+            return false;
+        }
+        
+        // Désactiver TOUS les autres raccourcis Ctrl/Meta (doit être en dernier)
+        if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            e.stopPropagation();
+            showCheatPopup('Les raccourcis Ctrl sont désactivés !');
+            return false;
+        }
+        
+        // Détecter Alt+F4 (fermer la fenêtre)
+        if (e.altKey && (e.key === 'F4' || e.keyCode === 115)) {
+            e.preventDefault();
+            showCheatPopup('Tu ne peux pas fermer la fenêtre !');
+            return false;
+        }
     });
     
     
@@ -443,6 +672,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Détection supplémentaire via debugger et console
     let devtoolsDetected = false;
+    let lastDevtoolsWarning = 0;
+    const DEVMTOOLS_WARNING_COOLDOWN = 5000; // 5 secondes entre chaque avertissement
     
     const detectConsoleAdvanced = () => {
         const element = new Image();
@@ -452,8 +683,10 @@ document.addEventListener('DOMContentLoaded', () => {
             get: function() {
                 if (!detected) {
                     detected = true;
-                    if (!devtoolsDetected) {
+                    const now = Date.now();
+                    if (!devtoolsDetected && (now - lastDevtoolsWarning > DEVMTOOLS_WARNING_COOLDOWN)) {
                         devtoolsDetected = true;
+                        lastDevtoolsWarning = now;
                         showCheatPopup('Ferme la console de développement !');
                     }
                 }
@@ -463,13 +696,88 @@ document.addEventListener('DOMContentLoaded', () => {
         // Utiliser requestAnimationFrame pour éviter le spam
         requestAnimationFrame(() => {
             devtoolsDetected = false;
-            console.log(element);
+            // Utiliser la fonction originale pour éviter la récursion
+            const originalLog = console.log;
+            originalLog.call(console, element);
             console.clear();
         });
     };
     
-    // Vérifier périodiquement (toutes les 2 secondes)
-    setInterval(detectConsoleAdvanced, 2000);
+    // Vérifier périodiquement (toutes les 3 secondes au lieu de 2)
+    setInterval(detectConsoleAdvanced, 3000);
+    
+    // =======================
+    // Protection supplémentaire contre les DevTools
+    // =======================
+    
+    // Détection via debugger statement (seulement si les DevTools sont vraiment ouverts)
+    let debuggerCheckCount = 0;
+    setInterval(() => {
+        // Ne vérifier que toutes les 3 secondes pour éviter le spam
+        if (debuggerCheckCount % 3 === 0) {
+            const start = performance.now();
+            try {
+                debugger;
+            } catch(e) {}
+            const end = performance.now();
+            const elapsed = end - start;
+            // Seulement si le debugger prend vraiment beaucoup de temps (plus de 200ms)
+            // et si on n'a pas déjà affiché un warning récemment
+            if (elapsed > 200 && (Date.now() - lastDevtoolsWarning > DEVMTOOLS_WARNING_COOLDOWN)) {
+                lastDevtoolsWarning = Date.now();
+                showCheatPopup('Ferme la console de développement !');
+            }
+        }
+        debuggerCheckCount++;
+    }, 1000);
+    
+    // Note: Les overrides de console.log et console.error ont été retirés
+    // car ils causaient des boucles infinies (le code lui-même utilise console.log/error)
+    // La détection se fait maintenant uniquement via la taille de la fenêtre et le debugger
+    
+    // Empêcher l'inspection d'éléments
+    document.addEventListener('keydown', (e) => {
+        // Détecter Ctrl+Shift+K (Firefox DevTools)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'K' || e.key === 'k')) {
+            e.preventDefault();
+            showCheatPopup();
+            return false;
+        }
+        
+        // Détecter Ctrl+Shift+B (toggle barre d'outils)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'B' || e.key === 'b')) {
+            e.preventDefault();
+            showCheatPopup();
+            return false;
+        }
+        
+        // Détecter Ctrl+Shift+Del (effacer les données)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'Delete' || e.keyCode === 46)) {
+            e.preventDefault();
+            showCheatPopup();
+            return false;
+        }
+    });
+    
+    // Empêcher l'accès au menu développeur via clic droit
+    document.addEventListener('mousedown', (e) => {
+        // Détecter le clic avec Ctrl+Shift (inspecter l'élément)
+        if (e.ctrlKey && e.shiftKey && e.button === 0) {
+            e.preventDefault();
+            showCheatPopup('Tu ne peux pas inspecter les éléments !');
+            return false;
+        }
+    });
+    
+    // Empêcher l'ouverture de la console via le menu
+    document.addEventListener('keydown', (e) => {
+        // Détecter Ctrl+Shift+K (Firefox)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'K' || e.key === 'k')) {
+            e.preventDefault();
+            showCheatPopup();
+            return false;
+        }
+    });
     
     // =======================
     // Règles de validation
@@ -643,8 +951,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('btnText').style.display = 'none';
 
         try {
-            // Utiliser POST au lieu de GET pour sécuriser le mot de passe
-            const response = await fetch('api/get-flag.php', {
+            // Utiliser HTTPS pour sécuriser le mot de passe en transit
+            // Détecter si on est en HTTPS ou HTTP
+            const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+            const host = window.location.host;
+            const apiUrl = `${protocol}//${host}/api/get-flag.php`;
+            
+            // Utiliser POST avec HTTPS pour sécuriser le mot de passe
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
